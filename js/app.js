@@ -1,4 +1,5 @@
-angular.module("modelingApp", [])
+angular.module('modelingApp',['ngMaterial'])
+
 .controller("MainCtrl", ['$scope', function($scope) {
 	$scope.fileName = "";
 	$scope.imgData;
@@ -48,21 +49,11 @@ angular.module("modelingApp", [])
 		result[0] = new Array(width);
 		for (var pixel = 0, row = 0, col = 0; pixel < pixels.length; pixel += pixelLength) {
 			var argb = 0;
-			/*
-			argb += (pixels[pixel] & 0xff) << 24; // alpha
-			argb += (pixels[pixel + 1] & 0xff); // blue
-			argb += (pixels[pixel + 2] & 0xff) << 8; // green
-			argb += (pixels[pixel + 3] & 0xff) << 16; // red
-			*/
 			argb += (pixels[pixel] & 0xff) << 16; // red
 			argb += (pixels[pixel + 1] & 0xff) << 8; // green
 			argb += (pixels[pixel + 2] & 0xff); // blue
 			argb += (pixels[pixel + 3] & 0xff) << 24; // alpha
 			
-			
-			
-
-			//result[row][col] = argb;
 			result[row][col] = argb <= -16700000 ? 1 : 0;
 			col++;
 			if (col == width && pixel < pixels.length - 4) {
@@ -86,10 +77,12 @@ angular.module("modelingApp", [])
 }]);
 
 
+/*
+	Three JS code that renders the 3D model
+*/
 var scene;
 var camera;
 var renderer;
-
 
 var init = function(binaryData) {
 var cubeX = 1;
@@ -136,9 +129,8 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 
-//var texture = THREE.ImageUtils.loadTexture('resource/block.jpg');
 var mats = [];
-mats.push(new THREE.MeshBasicMaterial( { color: 0xbcbfa4} ));//RIGHT:dark white
+mats.push(new THREE.MeshBasicMaterial({color: 0xbcbfa4}));//RIGHT:dark white
 mats.push(new THREE.MeshBasicMaterial({color: 0xbcbfa4})); //LEFT: dark white
 mats.push(new THREE.MeshBasicMaterial({color: 0xbcbfa4}));//Back: dark white
 mats.push(new THREE.MeshBasicMaterial({color: 0xd0d3b7}));//Front: white
