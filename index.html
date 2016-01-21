@@ -1,0 +1,35 @@
+<html>
+	<head>
+		<title>3D Modeling Tool</title>
+		<script type="text/javascript" src="js/angular.min.js"></script>
+		<script type="text/javascript" src="js/app.js"></script>
+		
+		<script src="js/three.min.js"></script>
+		<script src="js/jquery-1.11.3.min.js"></script>
+		<script src="js/OrbitControls.js"></script>
+
+	</head>
+	<body ng-app="modelingApp">
+	<div ng-controller="MainCtrl">
+		
+		<div ng-if="!ready">
+			<div>
+				Select a text file: 
+				<input type="file" id="fileInput" ng-click="convertImageToData()">
+			</div>
+			
+
+			<canvas id="canvas" width="0" height="0">
+				Your browser does not support the HTML5 canvas tag.
+			</canvas>
+
+
+			<div ng-if="fileName.length > 0">
+				{{fileName}} is loaded. 
+				<button ng-click="draw3dModel()">Next Step</button>
+			</div>
+		</div>
+	</div>
+		
+	</body>
+</html>

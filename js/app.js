@@ -1,27 +1,97 @@
+angular.module("modelingApp", [])
+.controller("MainCtrl", ['$scope', function($scope) {
+	$scope.fileName = "";
+	$scope.imgData;
+	$scope.binaryData;
+	$scope.ready = false;
 
-console.log("TEST");
+	/* 
+		Pick File, Draw Image and obtain image data
+	*/
+	$scope.convertImageToData = function() {
+		var fileInput = document.getElementById('fileInput');
+		fileInput.addEventListener('change', function(e) {
+			var file = fileInput.files[0];
+			var textType = /png.*/;
+			if (file.type.match(textType)) {
+					
+				var ctx = document.getElementById('canvas').getContext('2d');
+				var img = new Image();
+				img.onload = function() {
+					ctx.canvas.width = img.width;
+					ctx.canvas.height = img.height;
+				    ctx.drawImage(img, 0,0, img.width, img.height);
+				    //Retrieve data
+				    $scope.imgData = ctx.getImageData(0, 0, img.width, img.height);
+				    $scope.fileName = file.name;
+				    //Convert to binary format
+				    $scope.convertDataToBinaryArray($scope.imgData);
+				    $scope.$apply();
+				}
+				img.src = URL.createObjectURL(file);
+				
+			} else {
+				console.log("File not supported!");
+			}
+			
+		});	
+	};
+	/*
+		Convert RGBA data into binary array
+	*/
+	$scope.convertDataToBinaryArray = function(data){
+		var pixels = data.data;
+      	var width = data.width;
+      	var height = data.height;
+		var pixelLength = 4;
+		var result = new Array(height);
+		result[0] = new Array(width);
+		for (var pixel = 0, row = 0, col = 0; pixel < pixels.length; pixel += pixelLength) {
+			var argb = 0;
+			/*
+			argb += (pixels[pixel] & 0xff) << 24; // alpha
+			argb += (pixels[pixel + 1] & 0xff); // blue
+			argb += (pixels[pixel + 2] & 0xff) << 8; // green
+			argb += (pixels[pixel + 3] & 0xff) << 16; // red
+			*/
+			argb += (pixels[pixel] & 0xff) << 16; // red
+			argb += (pixels[pixel + 1] & 0xff) << 8; // green
+			argb += (pixels[pixel + 2] & 0xff); // blue
+			argb += (pixels[pixel + 3] & 0xff) << 24; // alpha
+			
+			
+			
 
-getTxt = function (){
+			//result[row][col] = argb;
+			result[row][col] = argb <= -16700000 ? 1 : 0;
+			col++;
+			if (col == width && pixel < pixels.length - 4) {
+				col = 0;
+				row++;
+				result[row] = new Array(width);
+			}
+		}
+		$scope.binaryData = result;
 
-  $.ajax({
-  url:'http://shawnfandev.com/Testing/AutoBuildingBlock/resource/Division1.txt', 
-  success: function (data){ 
-  	//console.log(data);
-  	console.log("CUSS")
-	init(data);
-	render();
-	} 
-  });
-}
+	};
 
-getTxt();
+	//Render 3D model with three.js
+	$scope.draw3dModel = function(){
+		console.log("draw it now!" );
+		init($scope.binaryData);
+		render();
+		$scope.ready = true;
+		console.log("It works here");
+	};
+}]);
+
 
 var scene;
 var camera;
 var renderer;
 
 
-var init = function(dataString) {
+var init = function(binaryData) {
 var cubeX = 1;
 var cubeY = 1;
 var cubeZ = 50;   
@@ -40,7 +110,6 @@ camera.position.x = 0;
 camera.position.y = 0;
 camera.position.z =  600;
 */
-
 
 camera.position.x = 0; 
 camera.position.y = -600;
@@ -67,7 +136,7 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 
-var texture = THREE.ImageUtils.loadTexture('resource/block.jpg');
+//var texture = THREE.ImageUtils.loadTexture('resource/block.jpg');
 var mats = [];
 mats.push(new THREE.MeshBasicMaterial( { color: 0xbcbfa4} ));//RIGHT:dark white
 mats.push(new THREE.MeshBasicMaterial({color: 0xbcbfa4})); //LEFT: dark white
@@ -86,28 +155,26 @@ material = faceMaterial;
 var controls = new THREE.OrbitControls( camera, renderer.domElement );
 
 
-var blockMap = dataString.split('\n');
+var blockMap = binaryData;
 
 //var length = blockMap.length;
 for (var row = 0; row < blockMap.length; row++) {
 	for (var col = 0; col < blockMap[row].length; col++) {
 		if (blockMap[row][col] > 0){
-			//console.log("x: " + row + " y: " + col + "  " + blockMap[row][col])
 			var cube = new THREE.Mesh( geometry, material );
 			cube.position.x = row;
 			cube.position.y = col;
 			scene.add( cube );
 		}
-		
 	}
 }
 
-
-}
+};
 
 
 var render = function () {
 	requestAnimationFrame( render );
+	/*
 	console.log(camera.position);
 	console.log("[cam - POS - ROT")
 	console.log(camera.rotation);
@@ -115,8 +182,14 @@ var render = function () {
 	console.log(scene.position);
 	console.log("scene - POS - ROT]")
 	console.log(scene.rotation);
-	
+	*/
 	renderer.render(scene, camera);
 };
+
+
+
+
+
+
 
 
