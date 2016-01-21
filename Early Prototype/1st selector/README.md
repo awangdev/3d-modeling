@@ -1,5 +1,5 @@
 # 3d-modeling
-This project is using ThreeJS to build 3D Building Floor Plan models from Floor Blue Print images. This is a early stage prototype, only allowing to pick pre-processed file.
+This project is using ThreeJS to build 3D Building Floor Plan models from Floor Blue Print images.
 
 ***Example***
 
@@ -9,12 +9,12 @@ This is a random floor plan found online, and with the 3D Modeling tool, we can 
 Floor Plan:
 
 
-![](https://github.com/shawnfan/3d-modeling/blob/master/resource/round-floor-plan.png)
+![](https://github.com/shawnfan/3d-modeling/blob/master/Early%20Prototype/1st%20selector/resource/round-floor-plan.png)
 
 Outcome:
 
 
-![](https://github.com/shawnfan/3d-modeling/blob/master/resource/round.png)
+![](https://github.com/shawnfan/3d-modeling/blob/master/Early%20Prototype/1st%20selector/resource/round.png)
 
 
 
@@ -24,9 +24,9 @@ Basically any map (so far I have decide only recognize black color as height) ca
 Map:
 
 
-![](https://github.com/shawnfan/3d-modeling/blob/master/resource/map-floor-plan.png)
+![](https://github.com/shawnfan/3d-modeling/blob/master/Early%20Prototype/1st%20selector/resource/map-floor-plan.png)
 
 Outcome:
 
 
-![](https://github.com/shawnfan/3d-modeling/blob/master/resource/map.png)
+![](https://github.com/shawnfan/3d-modeling/blob/master/Early%20Prototype/1st%20selector/resource/map.png)
