@@ -68,11 +68,116 @@ angular.module('modelingApp',['ngMaterial'])
 
 	//Render 3D model with three.js
 	$scope.draw3dModel = function(){
+		$scope.binaryData  = $scope.optimizeDataset($scope.binaryData);
+
 		console.log("draw it now!" );
 		init($scope.binaryData);
 		render();
 		$scope.ready = true;
 		console.log("It works here");
+
+	};
+	/*
+		Optimize the dataset by reducing the number of cubes needed
+	*/
+	$scope.optimizeDataset = function(dataInput){
+		/*
+		var dataset = [[1,1,1,1,1],
+					[1,1,1,1,1],
+					[0,0,1,1,1],
+					[1,1,1,0,1],
+					[1,1,1,0,1]];	
+					*/
+		var dataset = dataInput;
+		
+		console.log("START!");
+		/*
+		for(var i = 0; i < dataset.length; i++) {
+			console.log(dataset[i]);
+		}*/
+		
+		var height = dataset.length;
+		var width = dataset[0].length;
+		var length = 1;
+		var stack = [];
+		var newStack = [];
+		var head = {val:dataset[0][0],x:0,y:0};
+		stack.push(head);
+		
+		//Optimize a square that the 'head' is currently in
+		var optimizeSquare = function() {
+			while (stack.length > 0) {
+				var validSquare = true;
+				for (var i = 0; i < stack.length; i++) {
+					var item = stack[i];
+					var x = item.x;
+					var y = item.y;
+					if (x + 1 < height && y + 1 < width && dataset[x + 1][y] != 0 &&
+						dataset[x][y + 1] != 0 && dataset[x + 1][y + 1] != 0) {
+						if (dataset[x][y+1] != "M") {
+							dataset[x][y+1] = "M";
+							newStack.push({val:dataset[x][y+1], x:x, y:y+1});
+						}
+						if (dataset[x+1][y] != "M") {
+							dataset[x+1][y] = "M";
+							newStack.push({val:dataset[x+1][y], x:x+1, y:y});
+						}
+						if (dataset[x+1][y+1] != "M") {
+							dataset[x+1][y+1] = "M";
+							newStack.push({val:dataset[x+1][y+1], x:x+1, y:y+1});
+						}
+					} else {
+						validSquare = false;
+						break;
+					}
+				}
+				if (validSquare) {
+					length++;
+				} else {
+					while (newStack.length > 0){
+						var item = newStack.pop();
+						dataset[item.x][item.y] = 1;
+					}
+				}
+				dataset[head.x][head.y] = "L:"+length;
+				stack = newStack;
+				newStack = [];
+				
+			}//end while
+			
+			
+		};
+		
+		//Find next possible head
+		var findNextHead = function(){
+			var foundHead = false;
+			var i = head.x;
+			var j = head.y;
+			for (; i < height && !foundHead; i++) {
+				for (; j < width && !foundHead; j++) {
+					if (dataset[i][j] == 1) {
+						head = {val:dataset[i][j],x:i,y:j};
+						stack.push(head);
+						length = 1;
+						foundHead = true;
+					} 
+				}
+				j = 0;
+			}
+			return foundHead;
+			console.log("Start new Head at :" + head.x + " " + head.y);	
+		};
+
+		while (head.x < height || head.y < width) {
+			optimizeSquare();			
+			if (!findNextHead()) {
+				console.log("Map Optimization completed!");
+				break;
+			}
+
+		}
+
+		return dataset;
 	};
 }]);
 
@@ -84,7 +189,7 @@ var scene;
 var camera;
 var renderer;
 
-var init = function(binaryData) {
+var init = function(blockMap) {
 var cubeX = 1;
 var cubeY = 1;
 var cubeZ = 50;   
@@ -141,22 +246,24 @@ var faceMaterial = new THREE.MeshFaceMaterial(mats);
 //var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 
 
-var geometry = new THREE.BoxGeometry( cubeX, cubeY, cubeZ );
+//var geometry = new THREE.BoxGeometry( cubeX, cubeY, cubeZ );
 //var material = new THREE.MeshBasicMaterial( { color: 0xd0d3b7, wireframe: false, wireframeLinewidth: 10, map:texture} );
 material = faceMaterial;
 var controls = new THREE.OrbitControls( camera, renderer.domElement );
 
 
-var blockMap = binaryData;
-
-//var length = blockMap.length;
 for (var row = 0; row < blockMap.length; row++) {
+	console.log(blockMap[row]);
 	for (var col = 0; col < blockMap[row].length; col++) {
-		if (blockMap[row][col] > 0){
+		
+		if (blockMap[row][col] != 0 && blockMap[row][col] != "M"){
+			var len = (blockMap[row][col].split(":"))[1];
+			var geometry = new THREE.BoxGeometry( len, len, cubeZ );
 			var cube = new THREE.Mesh( geometry, material );
-			cube.position.x = row;
-			cube.position.y = col;
-			scene.add( cube );
+
+			cube.position.x = row + len/2.0;
+			cube.position.y = col + len/2.0;
+			scene.add(cube);
 		}
 	}
 }
