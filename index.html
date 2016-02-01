@@ -45,7 +45,7 @@
 
 	      <div class="md-toolbar-tools" ng-if="ready">
 	        <h2>
-	          <span>3D Modeling</span>
+	          <span ng-click="reload()">3D Modeling</span>
 	        </h2>
 	        <span flex></span>
 	       	Controls:
@@ -65,6 +65,13 @@
 
 	    </md-toolbar>
       </md-content>
+      <md-content flex layout-padding ng-if="!ready && fileName.length <= 0">
+	    <h3>How this works?</h3>
+	    <p>First, you need a 2D floor plan ready in black and white color. For example, this procedure can be done by performing photoshop work on a blue print of a floor plan.</p>
+	    <p>Second, select that 2D floor plan, and render the 3D model!</p>
+	    <p>Third, you would adjust the positions of the 3D model to fit in your screen.</p>
+	  </md-content>
+
 
          <div ng-if="!ready">
             <canvas id="canvas" width="0" height="0">
