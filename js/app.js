@@ -10,8 +10,8 @@ angular.module('modelingApp',['ngMaterial'])
     	// Appending dialog to document.body to cover sidenav in docs app
     	var confirm = $mdDialog.confirm()
           .title('Would you like to to render this 3D model?')
-          .textContent('The 3D model will be rendered in a few seconds...')
-          .ariaLabel('Lucky day')
+          .textContent('Once confirmed, the 3D model will be rendered in a few seconds...')
+          .ariaLabel('')
           .targetEvent(ev)
           .ok('Confirm')
           .cancel('Cancel');
@@ -228,6 +228,10 @@ angular.module('modelingApp',['ngMaterial'])
 		overalMesh.scale.set(scale, scale, scale)
 	};
 
+
+	$scope.reload = function(){
+		window.location.reload();
+	};
 	
 }]);
 
