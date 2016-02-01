@@ -1,10 +1,25 @@
 angular.module('modelingApp',['ngMaterial'])
 
-.controller("MainCtrl", ['$scope', function($scope) {
+.controller("MainCtrl", ['$scope', '$mdDialog', function($scope,$mdDialog) {
 	$scope.fileName = "";
 	$scope.imgData;
 	$scope.binaryData;
 	$scope.ready = false;
+
+	$scope.showConfirm = function(ev) {
+    	// Appending dialog to document.body to cover sidenav in docs app
+    	var confirm = $mdDialog.confirm()
+          .title('Would you like to to render this 3D model?')
+          .textContent('The 3D model will be rendered in a few seconds...')
+          .ariaLabel('Lucky day')
+          .targetEvent(ev)
+          .ok('Confirm')
+          .cancel('Cancel');
+	    $mdDialog.show(confirm).then(function() {
+	      $scope.draw3dModel();
+	    }, function() {
+	    });
+	 };
 
 	/* 
 		Pick File, Draw Image and obtain image data
@@ -36,6 +51,8 @@ angular.module('modelingApp',['ngMaterial'])
 			}
 			
 		});	
+
+		document.getElementById('fileInput').click();
 	};
 	/*
 		Convert RGBA data into binary array
@@ -151,8 +168,7 @@ angular.module('modelingApp',['ngMaterial'])
 				}
 				j = 0;
 			}
-			return foundHead;
-			console.log("Start new Head at :" + head.x + " " + head.y);	
+			return foundHead;	
 		};
 
 		while (head.x < height || head.y < width) {
@@ -167,6 +183,7 @@ angular.module('modelingApp',['ngMaterial'])
 		return dataset;
 	};
 
+	//Camera location
 	$scope.xPlus = function() {
 		camera.position.x += 50;
 	};
@@ -181,17 +198,7 @@ angular.module('modelingApp',['ngMaterial'])
 		camera.position.y -= 50;
 	};
 
-
-
-	$scope.depthPlus = function() {
-		overalMesh.position.z += 100;
-	};
-	$scope.depthMinus = function() {
-		overalMesh.position.z -= 100;
-	};
-
-
-	//Rotation:
+	//Camera rotation:
 	$scope.threeDPlus = function(){
 		camera.rotation.x += 0.1;
 	};
@@ -199,10 +206,19 @@ angular.module('modelingApp',['ngMaterial'])
 		camera.rotation.x -= 0.1;
 	};
 	$scope.rotate = function(){
-		camera.rotation.y += Math.PI / 2;;
+		camera.rotation.z += Math.PI / 2;
 	};
 	
-	//scene
+
+
+	//Mesh Depth
+	$scope.depthPlus = function() {
+		overalMesh.position.z += 100;
+	};
+	$scope.depthMinus = function() {
+		overalMesh.position.z -= 100;
+	};
+	//Mesh scale
 	$scope.scalePlus = function() {
 		var scale = overalMesh.scale.x + 0.1;
 		overalMesh.scale.set(scale, scale, scale)
@@ -212,103 +228,79 @@ angular.module('modelingApp',['ngMaterial'])
 		overalMesh.scale.set(scale, scale, scale)
 	};
 
+	
 }]);
 
 
-/*
+/**
 	Three JS code that renders the 3D model
-*/
+**/
+//Global objects
 var scene;
 var camera;
 var renderer;
 var overalMesh
 
+/*
+	Initialize the the scene with cubes merged into geometry.
+*/
 var init = function(blockMap) {
-var cubeX = 1;
-var cubeY = 1;
-var cubeZ = 25;   
+	var cubeX = 1;
+	var cubeY = 1;
+	var cubeZ = 25;   
 
-scene = new THREE.Scene();
-camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 0.1, 20000 );
+	scene = new THREE.Scene();
+	camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 0.1, 20000 );
 
-camera.position.x = window.innerWidth/2;
-camera.position.y = window.innerHeight/2;
-camera.position.z = 100;
+	camera.position.x = window.innerWidth/2;
+	camera.position.y = window.innerHeight/2;
+	camera.position.z = 100;
 
-var directionalLight = new THREE.DirectionalLight( 0x00ff00, 1 );
-directionalLight.position.set( 0, 1, 0 );
-scene.add( directionalLight );
+	var directionalLight = new THREE.DirectionalLight( 0x00ff00, 1 );
+	directionalLight.position.set( 0, 1, 0 );
+	scene.add( directionalLight );
 
-//var geometry = new THREE.PlaneGeometry( 8192, 8192, 32 );
-//var material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide} );
-//var plane = new THREE.Mesh( geometry, material );
-//scene.add( plane );
+	renderer = new THREE.WebGLRenderer();
+	renderer.setClearColor( 0xffffff, 1 );
+	renderer.setSize( window.innerWidth, window.innerHeight); 
 
-renderer = new THREE.WebGLRenderer();
-renderer.setClearColor( 0xffffff, 1 );
-renderer.setSize( window.innerWidth, window.innerHeight); 
+	document.body.appendChild( renderer.domElement );
 
+	var mats = [];
+	mats.push(new THREE.MeshBasicMaterial({color: 0xbcbfa4}));//RIGHT:dark white
+	mats.push(new THREE.MeshBasicMaterial({color: 0xbcbfa4})); //LEFT: dark white
+	mats.push(new THREE.MeshBasicMaterial({color: 0xbcbfa4}));//Back: dark white
+	mats.push(new THREE.MeshBasicMaterial({color: 0xd0d3b7}));//Front: white
+	mats.push(new THREE.MeshBasicMaterial({color: 0x5b5b5b}));//TOP: Grey
+	mats.push(new THREE.MeshBasicMaterial({color: 0x0000}));//Bottom:black
+	var faceMaterial = new THREE.MeshFaceMaterial(mats);
 
-document.body.appendChild( renderer.domElement );
+	var len = 0;
+	var overalGeometry = new THREE.Geometry();
+	for (var row = 0; row < blockMap.length; row++) {
+		for (var col = 0; col < blockMap[row].length; col++) {
+			if (blockMap[row][col] != 0 && blockMap[row][col] != "M"){
+				len = (blockMap[row][col].split(":"))[1];
+				var geometry = new THREE.BoxGeometry(len, len, cubeZ);
+				var cube = new THREE.Mesh( geometry, faceMaterial );
 
-
-var mats = [];
-mats.push(new THREE.MeshBasicMaterial({color: 0xbcbfa4}));//RIGHT:dark white
-mats.push(new THREE.MeshBasicMaterial({color: 0xbcbfa4})); //LEFT: dark white
-mats.push(new THREE.MeshBasicMaterial({color: 0xbcbfa4}));//Back: dark white
-mats.push(new THREE.MeshBasicMaterial({color: 0xd0d3b7}));//Front: white
-mats.push(new THREE.MeshBasicMaterial({color: 0x5b5b5b}));//TOP: Grey
-mats.push(new THREE.MeshBasicMaterial({color: 0x0000}));//Bottom:black
-var faceMaterial = new THREE.MeshFaceMaterial(mats);
-
-//var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-
-
-//var geometry = new THREE.BoxGeometry( cubeX, cubeY, cubeZ );
-//var material = new THREE.MeshBasicMaterial( { color: 0xd0d3b7, wireframe: false, wireframeLinewidth: 10, map:texture} );
-material = faceMaterial;
-
-//Mouse Control
-//var controls = new THREE.OrbitControls(camera, renderer.domElement );
-
-var countBlock = 0;
-var len = 0;
-var overalGeometry = new THREE.Geometry();
-for (var row = 0; row < blockMap.length; row++) {
-	for (var col = 0; col < blockMap[row].length; col++) {
-		if (blockMap[row][col] != 0 && blockMap[row][col] != "M"){
-			countBlock++;
-			len = (blockMap[row][col].split(":"))[1];
-			var geometry = new THREE.BoxGeometry( len, len, cubeZ );
-			var cube = new THREE.Mesh( geometry, faceMaterial );
-
-			cube.position.x = row + len/2.0;
-			cube.position.y = col + len/2.0;
-			
-			cube.updateMatrix();
-			overalGeometry.merge(cube.geometry, cube.matrix);
+				cube.position.x = row + len/2.0;
+				cube.position.y = col + len/2.0;
+				
+				cube.updateMatrix();
+				overalGeometry.merge(cube.geometry, cube.matrix);
+			}
 		}
 	}
-}
-overalMesh = new THREE.Mesh(overalGeometry, faceMaterial);
-scene.add(overalMesh);
-
-console.log(overalMesh.position);
-console.log("Number of blocks: " + countBlock);
+	overalMesh = new THREE.Mesh(overalGeometry, faceMaterial);
+	scene.add(overalMesh);
+	
+	//var controls = new THREE.OrbitControls(camera, renderer.domElement );
 };
 
 
 var render = function () {
 	requestAnimationFrame( render );
-	/*
-	console.log(camera.position);
-	console.log("[cam - POS - ROT")
-	console.log(camera.rotation);
-	console.log("]CAM---------SCENE[");
-	console.log(scene.position);
-	console.log("scene - POS - ROT]")
-	console.log(scene.rotation);
-	*/
 	renderer.render(scene, camera);
 };
 
