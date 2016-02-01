@@ -10,12 +10,12 @@ Simply download the entire project and launch index.html, and the rest will be v
 
 Basically the user needs to have a Black/Wite png image ready, upload, and render the 3D model. Note, you'd have to have the floor plan ready, and this software will handle the rest.
 
-A couple tricks we are doing here:    
-   **Convert png into binary code**
-   **Optimize the binary 2D array with BFS**
-   **Optimize the 3D models with ThreeJS's Geometry merge function**
-   **Render 3D model**
-   **Allow control of the 3D model**
+A couple tricks we are doing here:       
+   **Convert png into binary code**   
+   **Optimize the binary 2D array with BFS**   
+   **Optimize the 3D models with ThreeJS's Geometry merge function**   
+   **Render 3D model**   
+   **Allow control of the 3D model**   
 
 Note: that we are not making precise 3D models, but just a simulation via pixels of cube models. The better your input png image is, the better the results will be. The definition of good png image is: clear and thick black walls.
 
